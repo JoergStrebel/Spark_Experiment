@@ -1,0 +1,10 @@
+.idea/
+target/
+bin/
+include/
+lib
+lib64
+share
+testdata_out
+*.csv
+*.iml
