@@ -9,4 +9,6 @@ testdata_out
 *.csv
 *.iml
 pyvenv.cfg
+*.jar
+testdata*
 

@@ -4,20 +4,20 @@ from pyspark.sql import SparkSession
 from pyspark.sql import Row
 
 def basic_datasource_example(spark, file, file2, logger):
-    df = spark.read.load(file, format="csv", sep=",", inferSchema="true", header="false")
-    df = df.filter(df[0] < 10000).sort(df[0]).coalesce(3)
+    df = spark.read.load(file, format="csv", sep=",", header="false")
+    df = df.filter(df[0] < 10000)
     df.explain(True)
     #print(df.rdd.toDebugString())  #only sensible for pyspark-shell
     #log.info(df.rdd.getNumPartitions())
     df.write.csv(file2, mode='overwrite')
 
 
-FILE_IN = '/home/jstrebel/devel/pyspark-test/testdata.csv'
+FILE_IN = '/home/jstrebel/devel/pyspark-test/testdata_large.csv'
 FILE_OUT = '/home/jstrebel/devel/pyspark-test/testdata_out'
 
 if __name__ == "__main__":
 
-    sc = SparkContext("local", "Spark Data Test")
+    sc = SparkContext(appName="Spark Data Test")
     sc.setLogLevel(logLevel="INFO")
 
     log4jLogger = sc._jvm.org.apache.log4j
