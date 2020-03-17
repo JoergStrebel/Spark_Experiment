@@ -12,8 +12,8 @@ def basic_datasource_example(spark, file, file2, logger):
     df.write.csv(file2, mode='overwrite')
 
 
-FILE_IN = '/home/jstrebel/devel/pyspark-test/testdata_large.csv'
-FILE_OUT = '/home/jstrebel/devel/pyspark-test/testdata_out'
+FILE_IN = '../testdata_large.csv'
+FILE_OUT = '../testdata_out'
 
 if __name__ == "__main__":
 

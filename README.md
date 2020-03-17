@@ -1,3 +1,5 @@
+## Python
+
 1. Clone repository into directory pyspark-test/
 
 2. Set up Python virtual environment : 
@@ -7,3 +9,54 @@
 
 2. Install requirements
 `pip3 install -r requirements.txt `
+
+## PosgreSQL
+Login postgres: `postgres/<root pw>`
+
+Daten unter /var/lib/pgsql/data
+
+```{shell script}
+jstrebel@linux-egr6:~> sudo -u postgres createuser -P -d jstrebel
+Geben Sie das Passwort der neuen Rolle ein: spark
+
+jstrebel@linux-egr6:~> sudo -u postgres createdb -O jstrebel pysparkdb
+jstrebel@linux-egr6:~> psql -d pysparkdb
+psql (10.10)
+Geben Sie »help« für Hilfe ein.
+pysparkdb=> create table testdata(idxnr integer, countnr integer, timedesc varchar(200));
+pysparkdb=> \copy testdata from '/home/jstrebel/devel/pyspark-test/testdata.csv' (FORMAT 'csv', delimiter ',');
+COPY 10000000
+pysparkdb=> select * from public.testdata limit 10;
+pysparkdb=> select * from pg_stat_activity;  -- check activity on the database
+```
+
+JDBC driver: 
+- https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html 
+- https://jdbc.postgresql.org/download.html
+
+
+## Apache Spark
+```
+spark-submit --master local[3] --driver-class-path postgresql-42.2.11.jar --jars ../postgresql-42.2.11.jar processdata_jdbc.py
+```
+
+## Erkenntnisse:
+- numPartitions alleine bringt nichts , Spark wird dann nur 1 Partition machen - 
+läuft aber! D.h. selbst eine Monster-Partition führt nicht zum Speicherüberlauf, da Spark 
+nur Einzelsätze durchreicht mittels Iteratoren. (csv-Zieldatei)
+- Man braucht schon noch die Bounds und die partitionColumn damit Spark parallelisiert
+- der Parameter "driver" in PySpark ist notwendig als Angabe bei PostgreSQL
+- die Anzahl der parallelen JDBC Verbindungen wird durch die verfügbaren Cores begrenzt - 
+1 Core = 1 Task = 1 Partition = 1 JDBC-Verbindung. In Summe kann man wesentlich mehr Partitionen haben, aber parallel verarbeitet werden die nur im Rahmen der verfügbaren Executor Cores.
+- auch Parquet kommt mit einer Partition zurecht. Es spillt dann auf die Disk wenn ihm der 
+Speicher fehlt.
+- Sortierung ist kein Problem, da Spark dann zwei Stages macht und das Schreiben der 
+Zielreihenfolge in Stage 2 passiert. In Stage 1 berechnet Spark dann die Reihenfolge.
+- Komisches Verhalten bei der Nutzung von DB-Indizes: der Ausführungsplan über Index liefert die Daten
+langsamer als ein SeqScan. Vermutung: der SeqScan ist 3-fach parallel , der Index-Scan nur 1-fach. Vermutlich ist 
+die Partitionierung genau so grobgranular, dass ein SeqScan damit schneller ist.
+- Wenn man rein das Herauskopieren der Daten anschaut per \COPY, dann ist der Index-Zugriff schneller, 
+aber auch nur weil das Caching in der DB besser ist. Wenn die Caches nicht gefüllt sind, ist der SeqScan schneller.
+Das macht Sinn, da sich der Index besser cachen lässt als der SeqScan.
+- Median Dauer pro Task mit Index und einem Core: 1,9 Min. 
+- Median Dauer pro Task mit parallelem SeqScan und einem Core: 1,1 Min. 
