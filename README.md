@@ -58,5 +58,27 @@ die Partitionierung genau so grobgranular, dass ein SeqScan damit schneller ist.
 - Wenn man rein das Herauskopieren der Daten anschaut per \COPY, dann ist der Index-Zugriff schneller, 
 aber auch nur weil das Caching in der DB besser ist. Wenn die Caches nicht gefüllt sind, ist der SeqScan schneller.
 Das macht Sinn, da sich der Index besser cachen lässt als der SeqScan.
-- Median Dauer pro Task mit Index und einem Core: 1,9 Min. 
-- Median Dauer pro Task mit parallelem SeqScan und einem Core: 1,1 Min. 
+- Auch ohne Partitionierung (und egal ob mit oder ohne dynamic resource allocation) gibt 
+es keinen Out-of-Memory.
+- Benchmark:
+  - Apache Spark: Median Dauer pro Partition mit Index und einem Core komprimiert 
+  bei 200 Partitionen: 1,9 Min. 
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+  komprimiert bei 200 Partitionen: 13 Sek. ??
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+  unkomprimiert bei 100 Partitionen: 13 Sek. ??
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+    komprimiert bei 100 Partitionen: 1,3 Min. 
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+  komprimiert bei 50 Partitionen: 1,3 Min.
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+    komprimiert bei 25 Partitionen: 1,3 Min.
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+  komprimiert bei 10 Partitionen: 1,3 Min.
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und einem Core 
+    komprimiert bei 1 Partition: 3 Min.
+  - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und 2 Cores 
+    komprimiert bei 2 Partition: 2 Min.
+  - PSQL \COPY: ca. 1,5 Min., (bei 200 Partitionen)
+- --> je weniger Partitionen, desto schneller; je mehr Cores, desto schneller
+    

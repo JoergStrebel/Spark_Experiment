@@ -16,7 +16,7 @@ def jdbc_dataset_example(spark, log, file_out):
         .option("driver", "org.postgresql.Driver")\
         .option("fetchsize", 5000)\
         .option("pushDownPredicate", True)\
-        .option("numPartitions", 200)\
+        .option("numPartitions", 2)\
         .option("partitionColumn","idxnr")\
         .option("lowerBound",0)\
         .option("upperBound", 1000000)\
@@ -46,7 +46,11 @@ if __name__ == "__main__":
 
     spark = SparkSession(sc) \
         .builder \
-        .getOrCreate()
+        .config('spark.sql.parquet.compression.codec', 'snappy') \
+        .config('spark.sql.parquet.filterPushdown','true') \
+        .config('spark.dynamicAllocation.enabled','true') \
+        .config('spark.shuffle.service.enabled','true') \
+    .getOrCreate()
 
     # basic_rdd_example(sc, FILE_IN, FILE_OUT, log)
     jdbc_dataset_example(spark, log, FILE_OUT)
