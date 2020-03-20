@@ -60,6 +60,22 @@ aber auch nur weil das Caching in der DB besser ist. Wenn die Caches nicht gefü
 Das macht Sinn, da sich der Index besser cachen lässt als der SeqScan.
 - Auch ohne Partitionierung (und egal ob mit oder ohne dynamic resource allocation) gibt 
 es keinen Out-of-Memory.
+- fetchsize()
+  - Beim PosgreSQL JDBC Treiber hat die Vergrößerung der fetchsize keine Auswirkung auf den 
+Speicherverbrauch. Eine fetchsize() von 0 sorgt dafür, dass kein DB-Cursor verwendet wird, was der default ist 
+und der JDBC-Treiber alle Daten auf einmal lädt, was in Apache Spark einen OoM Error verursacht.
+Eine zu hohe fetchsize z.B. 1000000 , führt auch bei PostgreSQL zu einem OoM Error. Siehe 
+[Link](https://medium.com/@FranckPachot/oracle-postgres-jdbc-fetch-size-3012d494712) und [Link 2](https://recurrentnull.wordpress.com/2015/11/20/raising-the-fetch-size-good-or-bad-memory-management-in-oracle-jdbc-12c/). 
+D.h. bei PostgreSQL immer die fetchsize setzen!
+  - Beim Oracle JDBC Treiber werden die per fetchsize() geholten Datensätze auf der Client-Seite
+  gespeichert, was bei einer zu hohen fetchsize zu einem OoM Error führt. Oracle hat per default 
+  eine fetchsize von 10 und nutzt DB-Cursors, so dass die Abfrage vielleicht langsam ist, aber nicht 
+  direkt abbricht.
+  - Lessons Learned: 
+    - Vermeide zu hohe fetchsizes, eher so 500 - 1000. Falsche fetchsizes dürften der Grund für
+  viele Job-Abbrüche in Apache Spark sein. Die fetchsize bestimmt die Puffergröße im JDBC 
+  ResultSet.
+    - Nutze den aktuellen Oracle 12c JDBC Treiber.   
 - Benchmark:
   - Apache Spark: Median Dauer pro Partition mit Index und einem Core komprimiert 
   bei 200 Partitionen: 1,9 Min. 
@@ -79,6 +95,8 @@ es keinen Out-of-Memory.
     komprimiert bei 1 Partition: 3 Min.
   - Apache Spark: Median Dauer pro Partition mit parallelem SeqScan und 2 Cores 
     komprimiert bei 2 Partition: 2 Min.
+  - Apache Spark: Median Dauer pro Partition mit Index und 2 Cores 
+  komprimiert bei 2 Partition: 2 Min.
   - PSQL \COPY: ca. 1,5 Min., (bei 200 Partitionen)
 - --> je weniger Partitionen, desto schneller; je mehr Cores, desto schneller
     
