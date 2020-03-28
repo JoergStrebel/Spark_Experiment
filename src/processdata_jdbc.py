@@ -10,13 +10,13 @@ def jdbc_dataset_example(spark, log, file_out):
     jdbcDF = spark.read\
         .format("jdbc")\
         .option("url", "jdbc:postgresql://localhost:5432/pysparkdb")\
-        .option("dbtable", "public.testdataidx")\
+        .option("dbtable", "public.testdata")\
         .option("user", "jstrebel")\
         .option("password", "")\
         .option("driver", "org.postgresql.Driver")\
-        .option("fetchsize", 1000000)\
+        .option("fetchsize", 100)\
         .option("pushDownPredicate", True)\
-        .option("numPartitions", 2)\
+        .option("numPartitions", 10)\
         .option("partitionColumn","idxnr")\
         .option("lowerBound",0)\
         .option("upperBound", 1000000)\

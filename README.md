@@ -60,6 +60,9 @@ aber auch nur weil das Caching in der DB besser ist. Wenn die Caches nicht gefü
 Das macht Sinn, da sich der Index besser cachen lässt als der SeqScan.
 - Auch ohne Partitionierung (und egal ob mit oder ohne dynamic resource allocation) gibt 
 es keinen Out-of-Memory.
+- Wenn die Anzahl der Partitionen zu groß ist bzw. wenn die einzelnen Partitionen zu viele und zu klein sind, 
+kommt die JVM nicht mehr mit der Garbage collection mit. Das gibt auch eine OoM Exception, aber
+ im Log steht schon deutlich, dass der GC überfordert war. 
 - fetchsize()
   - Beim PosgreSQL JDBC Treiber hat die Vergrößerung der fetchsize keine Auswirkung auf den 
 Speicherverbrauch. Eine fetchsize() von 0 sorgt dafür, dass kein DB-Cursor verwendet wird, was der default ist 
