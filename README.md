@@ -1,3 +1,4 @@
+# Apache Spark Batch
 ## Python
 
 1. Clone repository into directory pyspark-test/
@@ -35,12 +36,15 @@ JDBC driver:
 - https://jdbc.postgresql.org/download.html
 
 
-## Apache Spark
+## Loading data using JDBC in Apache Spark
 ```
-spark-submit --master local[3] --driver-class-path postgresql-42.2.11.jar --jars ../postgresql-42.2.11.jar processdata_jdbc.py
+cd ./Spark_Experiment/
+source ./pyspark-test/bin/activate
+cd ./src
+spark-submit --master local[2] --executor-memory 4G --driver-class-path postgresql-42.2.11.jar --jars ../postgresql-42.2.11.jar processdata_jdbc.py
 ```
 
-## Erkenntnisse:
+### Erkenntnisse:
 - numPartitions alleine bringt nichts , Spark wird dann nur 1 Partition machen - 
 läuft aber! D.h. selbst eine Monster-Partition führt nicht zum Speicherüberlauf, da Spark 
 nur Einzelsätze durchreicht mittels Iteratoren. (csv-Zieldatei)
@@ -102,4 +106,23 @@ D.h. bei PostgreSQL immer die fetchsize setzen!
   komprimiert bei 2 Partition: 2 Min.
   - PSQL \COPY: ca. 1,5 Min., (bei 200 Partitionen)
 - --> je weniger Partitionen, desto schneller; je mehr Cores, desto schneller
+
+## Deduplicating data in Apache Spark
+First, we load the data using JDBC and then write it to Parquet (see last chapter). 
+
+Now, we load the Parquet files, deduplicate the data and write new Parquet files. The executor memory should be smaller 
+than the size of the data files. In my case, executor memory should be at 4 GB.   
+
+```
+spark-submit --master local[2] --executor-memory 4G  --driver-class-path postgresql-42.2.11.jar --jars ../postgresql-42.2.11.jar processdata_jdbc.py
+```
+
+### Erkenntnisse:
+
     
+## TODO:
+
+- look at the execution plan of mapPartitions() vs. map() and the executor usage.
+- look up Bucketed Sorted Merge Joins
+
+

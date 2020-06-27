@@ -1,0 +1,12 @@
+https://www.youtube.com/watch?v=kv8kWvk1xyY
+Tricks of the Trade to be an Apache Spark Rock Star - Ted Malaska
+
+Many tricks not applicable as we have very short jobs , i.e. few to one stages. So no real point to checkpoint the job.
+
+Nested types: i.e. use nested data for denormalized data, i.e. use nested data structures to model hierachical relationships among joined / denormalized data sets.
+
+Big and Small: functions that affect all records/partitions and functions that affect only one partition.
+
+wow, we could use multi-threading in the driver to proces the same RDD with two actions at the same time, e.g. df.count() and dr.write()
+
+Bucketed Sorted Merge Joins

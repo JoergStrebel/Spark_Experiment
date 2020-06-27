@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyspark import SparkContext
+from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 from datetime import datetime
 
@@ -14,7 +14,7 @@ def jdbc_dataset_example(spark, log, file_out):
         .option("user", "jstrebel")\
         .option("password", "")\
         .option("driver", "org.postgresql.Driver")\
-        .option("fetchsize", 100)\
+        .option("fetchsize", 1000)\
         .option("pushDownPredicate", True)\
         .option("numPartitions", 10)\
         .option("partitionColumn","idxnr")\
@@ -38,7 +38,12 @@ FILE_OUT = '../testdata_out'+ now.strftime("%Y%m%d%H%M%S")
 
 if __name__ == "__main__":
 
-    sc = SparkContext(appName="Spark Data Test")
+    myconf = SparkConf() \
+        .setAppName("Spark Data Test") \
+        .setSparkHome("/home/jstrebel/devel/Spark_Experiment/pyspark-test/bin/")
+    myconf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
+    sc = SparkContext(conf=myconf)
     sc.setLogLevel(logLevel="INFO")
 
     log4jLogger = sc._jvm.org.apache.log4j
@@ -48,8 +53,8 @@ if __name__ == "__main__":
         .builder \
         .config('spark.sql.parquet.compression.codec', 'snappy') \
         .config('spark.sql.parquet.filterPushdown','true') \
-        .config('spark.dynamicAllocation.enabled','true') \
-        .config('spark.shuffle.service.enabled','true') \
+        .config('spark.dynamicAllocation.enabled','false') \
+        .config('spark.shuffle.service.enabled','false') \
     .getOrCreate()
 
     # basic_rdd_example(sc, FILE_IN, FILE_OUT, log)
