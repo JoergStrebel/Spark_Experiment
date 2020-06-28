@@ -29,6 +29,11 @@ pysparkdb=> \copy testdata from '/home/jstrebel/devel/pyspark-test/testdata.csv'
 COPY 10000000
 pysparkdb=> select * from public.testdata limit 10;
 pysparkdb=> select * from pg_stat_activity;  -- check activity on the database
+
+pysparkdb=> alter table public.testdata add column SORTTS timestamp, add column RNDSORTTS timestamp;
+pysparkdb=> update public.testdata set sortts=to_timestamp(timedesc, 'YYYY-MM-DD HH24:MI:SS.US');
+pysparkdb=> update public.testdata set rndsortts=sortts + random()* interval '10 hours';
+
 ```
 
 JDBC driver: 
@@ -114,7 +119,7 @@ Now, we load the Parquet files, deduplicate the data and write new Parquet files
 than the size of the data files. In my case, executor memory should be at 4 GB.   
 
 ```
-spark-submit --master local[2] --executor-memory 4G  --driver-class-path postgresql-42.2.11.jar --jars ../postgresql-42.2.11.jar processdata_jdbc.py
+spark-submit --master local[2] --executor-memory 4G  deduplicate_data_parquet.py
 ```
 
 ### Erkenntnisse:
