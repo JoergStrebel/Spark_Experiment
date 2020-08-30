@@ -8,6 +8,7 @@ from datetime import datetime
 from pyspark.sql import functions as F
 from pyspark.sql import Window, WindowSpec
 
+
 def parquet_datasource(spark, file, logger):
     df = spark.read.parquet(file)
     logger.info(df.rdd.getNumPartitions())
@@ -48,19 +49,27 @@ if __name__ == "__main__":
     log.info(f'Number of partitions: {df.rdd.getNumPartitions()}')
 
     # Variant 1:
-    #df = df.groupBy(['idxnr', 'countnr']).agg({'rndsortts':'max'})
-    dfagg = df.groupBy([df.idxnr, df.countnr]).agg(F.max(df.rndsortts))
-    dfagg = dfagg.select(dfagg.idxnr, dfagg.countnr, dfagg['max(rndsortts)'].alias('maxrndsortts'))
-    dfagg.cache()
+    #dfagg = df.groupBy([df.idxnr, df.countnr]).agg(F.max(df.rndsortts))
+    #dfagg = dfagg.select(dfagg.idxnr, dfagg.countnr, dfagg['max(rndsortts)'].alias('maxrndsortts'))
+    #dfagg.cache()
 
-    cond = [df.idxnr == dfagg.idxnr, df.countnr == dfagg.countnr, df.rndsortts == dfagg.maxrndsortts]
-    dfdedup = df.join(dfagg, cond, 'inner').select(dfagg.idxnr, dfagg.countnr, dfagg.maxrndsortts)
+    #cond = [df.idxnr == dfagg.idxnr, df.countnr == dfagg.countnr, df.rndsortts == dfagg.maxrndsortts]
+    #dfdedup = df.join(dfagg, cond, 'inner').select(dfagg.idxnr, dfagg.countnr, dfagg.maxrndsortts)
 
     #Variant 2:
+    # Shuffle Write 2.4 GB 1x!!
     #windowSpec = Window.partitionBy([df.idxnr, df.countnr])
     #df.rdd.getNumPartitions()
-    #windowSpec = windowSpec.withColumn('max_date', F.max(df.rndsortts).over(windowSpec))\
-    #    .filter((df.rndsortts == df.max_date)).drop('max_date')
+    #dfagg = df.withColumn("max_date", F.max(df.rndsortts).over(windowSpec))
+    #dfdedup = dfagg.filter(dfagg.rndsortts == dfagg.max_date)
+
+    # Variant 3:
+    # dense_rank() must have an orderBy clause
+    # Shuffle Write 2.4 GB 2x
+    windowSpec = Window.partitionBy([df.idxnr, df.countnr]).orderBy(df.rndsortts)
+    dfagg = df.withColumn("rank", F.dense_rank().over(windowSpec))
+    dfdedup = dfagg.filter(dfagg.rank == 1)
+    #dfdedup.rdd.getNumPartitions()
 
 
     dfdedup = dfdedup.coalesce(10)

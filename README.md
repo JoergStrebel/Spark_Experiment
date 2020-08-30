@@ -87,7 +87,11 @@ D.h. bei PostgreSQL immer die fetchsize setzen!
     - Vermeide zu hohe fetchsizes, eher so 500 - 1000. Falsche fetchsizes dürften der Grund für
   viele Job-Abbrüche in Apache Spark sein. Die fetchsize bestimmt die Puffergröße im JDBC 
   ResultSet.
-    - Nutze den aktuellen Oracle 12c JDBC Treiber.   
+    - Nutze den aktuellen Oracle 12c JDBC Treiber.
+- Ein normaler Lese-Schreib-Vorgang in PySpark führt zu einer konstanten, minimalen Speicherauslastung. 
+    Es wird kein Festplattenspeicher verbraucht; Spark reicht die Datensätze nur durch. Wenn so ein Job wegen 
+    Speichermangel scheitert, dann macht er mehr als nur Datensätze kopieren. Es macht auch keinen Unterschied,
+    wieviel RAM die Exekutoren besitzen.   
 - Benchmark:
   - Apache Spark: Median Dauer pro Partition mit Index und einem Core komprimiert 
   bei 200 Partitionen: 1,9 Min. 
@@ -123,6 +127,9 @@ spark-submit --master local[2] --executor-memory 4G  deduplicate_data_parquet.py
 ```
 
 ### Erkenntnisse:
+Beim Deduplizieren benötigt Spark ungefähr den Festplattenplatz, den 
+die zip-gepackten Rohdaten auch auf der Platte brauchen würden. Wenn mehrere Stages existieren,
+werden die Daten neu eingelesen, aber dadurch erhöht sich der Speicherverbrauch nicht.
 
     
 ## TODO:

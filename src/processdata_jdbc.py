@@ -40,7 +40,8 @@ if __name__ == "__main__":
 
     myconf = SparkConf() \
         .setAppName("Spark Data Test") \
-        .setSparkHome("/home/jstrebel/devel/Spark_Experiment/pyspark-test/bin/")
+        .setSparkHome("/home/jstrebel/devel/Spark_Experiment/pyspark-test/bin/")\
+        .set("spark.local.dir", "/home/jstrebel/devel/Spark_Experiment/tmp")
     myconf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
     sc = SparkContext(conf=myconf)
