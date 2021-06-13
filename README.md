@@ -137,4 +137,28 @@ werden die Daten neu eingelesen, aber dadurch erhöht sich der Speicherverbrauch
 - look at the execution plan of mapPartitions() vs. map() and the executor usage.
 - look up Bucketed Sorted Merge Joins
 
+# Floating-point processing in Apache Spark
+## 500,000 Random Values
+
+    Naive Sum:               num1 250040.9520799919, num2 249645.8385369990
+    FP Sum:                  num1 250040.9520800000, num2 249645.8385370000
+    NP 64bit:                num1 250040.9520799919, num2 249645.8385369990
+    NP 32bit:                num1 250039.3593750000, num2 249644.6875000000
+    Apache Spark Double:     num1 250040.9520800021, num2 249645.8385369985
+    Apache Spark Float:      num1 250040.9520797309, num2 249645.8385360024
+
+Result: Apache Spark shows pretty good accuracy when double data type is used. 
+
+## 500,000 x 0.1 as a worst case
+    Naive Sum CONST:                 num1 49999.9999995529, num2 49999.9999995529
+    FP Sum CONST:                    num1 50000.0000000000, num2 50000.0000000000
+    NP 64bit CONST:                  num1 49999.9999995529, num2 49999.9999995529
+    NP 32bit CONST:                  num1 50177.0976562500, num2 50177.0976562500
+    NP longdouble CONST:             num1 50000.0000000002, num2 50000.0000000002
+    Apache Spark Double CONST:       num1 49999.9999998334, num2 49999.9999998334
+    Apache Spark Float CONST:        num1 50000.0007450581, num2 50000.0007450581
+
+Result: As soon as floating point numbers need to be processed, we either need to use
+special algorithms (e.g. fsum()) or high-precision (64bit) in Python and numpy. Apache Spark is pretty 
+accurate also using Float data type, so no problems here.  
 
