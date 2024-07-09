@@ -7,6 +7,6 @@ pyspark==2.4.3
 python-dateutil==2.8.1
 pytz==2019.3
 six==1.13.0
-zipp==0.6.0
+zipp==3.19.1
 pypandoc
 
